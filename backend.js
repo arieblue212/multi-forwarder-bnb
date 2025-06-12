@@ -1,11 +1,23 @@
 require('dotenv').config();
 const { ethers } = require('ethers');
 const axios = require('axios');
+const express = require('express');
+const app = express();
+
+// Endpoint root untuk Railway health check
+app.get('/', (req, res) => {
+  res.send('✅ Backend Multi Forwarder ARIE aktif dan berjalan!');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🌐 Server aktif di port ${PORT}`);
+});
 
 const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 const COMMON_RECEIVER = process.env.COMMON_RECEIVER;
 
-// Ambil semua PRIVATE_KEY_* dari process.env
+// Ambil semua PRIVATE_KEY_* dari environment
 const PRIVATE_KEYS = Object.entries(process.env)
   .filter(([key]) => key.startsWith('PRIVATE_KEY_'))
   .map(([_, value]) => value.trim())
@@ -14,7 +26,7 @@ const PRIVATE_KEYS = Object.entries(process.env)
 // Inisialisasi wallet
 const wallets = PRIVATE_KEYS.map(key => new ethers.Wallet(key, provider));
 
-// Fungsi kirim notifikasi Telegram
+// Kirim notifikasi Telegram
 async function sendTelegramMessage(message) {
   try {
     await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -26,7 +38,7 @@ async function sendTelegramMessage(message) {
   }
 }
 
-// Fungsi forward BNB jika saldo cukup
+// Fungsi auto-forward
 async function forwardBNB(wallet) {
   const address = await wallet.getAddress();
   const balance = await provider.getBalance(address);
@@ -58,7 +70,7 @@ async function forwardBNB(wallet) {
   }
 }
 
-// Loop setiap 20 detik
+// Loop utama
 async function monitor() {
   console.log("🚀 Memulai monitoring semua wallet...");
   while (true) {
@@ -70,19 +82,3 @@ async function monitor() {
 }
 
 monitor();
-
-
-// ========== Tambahkan Express endpoint ==========
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('✅ Backend Multi Forwarder ARIE aktif dan berjalan!');
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ Server aktif di port ${PORT}`);
-});
-
-
