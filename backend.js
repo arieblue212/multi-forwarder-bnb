@@ -70,3 +70,19 @@ async function monitor() {
 }
 
 monitor();
+
+
+// ========== Tambahkan Express endpoint ==========
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('✅ Backend Multi Forwarder ARIE aktif dan berjalan!');
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Server aktif di port ${PORT}`);
+});
+
+
